@@ -1,112 +1,141 @@
 import socket
 import os
 from _thread import *
-
-ServerSideSocket1 = socket.socket()
-ServerSideSocket2 = socket.socket()
-ServerSideSocket3 = socket.socket()
-ServerSideSocket4 = socket.socket()
-ServerSideSocket5 = socket.socket()
-ServerSideSocket=[ServerSideSocket1,ServerSideSocket2,ServerSideSocket3,ServerSideSocket4,ServerSideSocket5]
+import time
+ServerSideSocket = socket.socket()
 host = '127.0.0.1'
-port = [2004,2005,2006,2007,2008]
+port = 2004
 ThreadCount = 0
-for i in range(len(ServerSideSocket)):
+topic2broker={1:2005,2:2006,3:2007,4:2008}
+topic2consumer={}
+allbrokers=[2005,2006,2007,2008,2009,2010,2020]
+try:
+    ServerSideSocket.bind((host, port))
+except socket.error as e:
+    print(str(e))
+print('Socket is listening..')
+ServerSideSocket.listen(5)
+def consumer_read(topic):
+    global topic2consumer
+    global allbrokers
+    for i in range(len(allbrokers)):
+        ClientSocket=socket.socket()
+        while True:
+            try:
+                ClientSocket.connect((host, allbrokers[i]))
+            except socket.error as e:
+                print(str(e))
+            else:
+                resv2 = ClientSocket.recv(1024)
+                break
+        for i in range(len(topic2consumer[topic])):
+            ClientSocket52=socket.socket()
+            try:
+                ClientSocket52.sendall(resv2)
+            except Exception:
+                topic2consumer[topic][i]=-1
+            else:
+                ClientSocket52.close()
+        topic2consumer[topic]=[x for x in topic2consumer[topic] if x!=-1]
+def multi_threaded_client(connection):
+    global topic2consumer
+    global topic2broker
+    global allbrokers
+    connection.send(str.encode('Server is working:'))
+    while True:
+        data = connection.recv(2048)
+        if not data:
+            connection.close()
+            break
+        data=data.decode('utf-8')
+        data= data.split(",")
+        port=data[0]
+        
+        if(port==1):
+             topic=data[1]
+             file=data[2]
+             file='1,'+file
+             
+             for i in range(len(topic2broker[topic])):
+                ClientMultiSocket = socket.socket()
+                try:
+                    ClientMultiSocket.connect((host, topic2broker[topic][i]))
+                except socket.error as e:
+                    print(str(e))
+                else:
+                    break
+             if i==len(topic2broker[topic]):
+                topic2broker[topic]=list()
+                for i in range(len(allbrokers)):
+                    try:
+                        ClientMultiSocket.connect((host, allbrokers[i]))
+                    except socket.error as e:
+                        print(str(e))
+                    else:
+                        topic2broker[topic]=topic2broker[topic].append(allbrokers[i])
+                        break
+             if i==len(allbrokers):
+                print("The leaders are unavailable at the moment")
+                connection.close()
+                break
+             ClientMultiSocket.sendall(file.encode())
+             
+             res = ClientMultiSocket.recv(1024)
+             connection.send(str.encode(res.decode('utf-8')))
+             connection.close()
+             consumer_read(topic)
+             
 
+        if(port==2):
+             topic=data[1]
+             portno=data[2]
+             flag=data[3]
+             topic2consumer[topic]=portno
+             res6="Connection successful"
+             connection.send(str.encode(res6))
+             connection.close()
+             ClientMultiSocket1 = socket.socket()
+             time.sleep(5)
+             if flag==1:
+                try:
+                    ClientMultiSocket1.connect((host,portno))
+                except socket.error as e:
+                    print(str(e))
+                    topic2consumer[topic].remove(portno)
+                    break
+                else:
+                    while True:
+                        for i in range(len(allbrokers)):
+                            ClientMultiSocket2 = socket.socket()
+                            try:
+                                ClientMultiSocket2.connect((host, allbrokers[i]))
+                            except socket.error as e:
+                                print(str(e))
+                            else:
+                                res = ClientMultiSocket2.recv(1024)
+                                if res:
+                                ClientMultiSocket2.close()  
+                                break
+                    
+                        if i!=len(allbrokers):
+                            break
+                    ClientMultiSocket1.sendall(str.encode(res.decode('utf-8')))
+                    res1 = ClientMultiSocket1.recv(1024)
+
+                    
+            
+             
+             connection.close()
+             
+        
+    
+while True:
     try:
-        ServerSideSocket[i].bind((host, port[i]))
+        Client, address = ServerSideSocket.accept()
+        print('Connected to: ' + address[0] + ':' + str(address[1]))
+        start_new_thread(multi_threaded_client, (Client, ))
+        ThreadCount += 1
+        print('Thread Number: ' + str(ThreadCount))
     except socket.error as e:
         print(str(e))
-    print('Socket is listening..')
-    ServerSideSocket[i].listen(5)
-def port1(connection):
-    
-    connection.send(str.encode('Server is working port1:'))
-    
-    while True:
-        data = connection.recv(2048)
-        response = 'Server message 1: ' + data.decode('utf-8')
-        if not data:
-            break
-        connection.sendall(str.encode(response))
-    connection.close()
-def port2(connection):
-    connection.send(str.encode('Server is working port2:'))
-    
-    while True:
-        data = connection.recv(2048)
-        response = 'Server message 2: ' + data.decode('utf-8')
-        if not data:
-            break
-        connection.sendall(str.encode(response))
-    connection.close()
-def port3(connection):
-    connection.send(str.encode('Server is working port3:'))
-    
-    while True:
-        data = connection.recv(2048)
-        response = 'Server message: ' + data.decode('utf-8')
-        if not data:
-            break
-        connection.sendall(str.encode(response))
-    connection.close()
-def port4(connection):
-    connection.send(str.encode('Server is working:'))
-    print("You are connected to port4")
-    while True:
-        data = connection.recv(2048)
-        response = 'Server message: ' + data.decode('utf-8')
-        if not data:
-            break
-        connection.sendall(str.encode(response))
-    connection.close()
-def port5(connection):
-    connection.send(str.encode('Server is working:'))
-    print("You are connected to port5")
-    while True:
-        data = connection.recv(2048)
-        response = 'Server message: ' + data.decode('utf-8')
-        if not data:
-            break
-        connection.sendall(str.encode(response))
-    connection.close()
-def multi_threaded_client(i):
-    global ThreadCount
-    
-    if i==0:
-        Client, address = ServerSideSocket[i].accept()
-        print('Connected to: ' + address[0] + ':' + str(address[1]))
-        start_new_thread(port1, (Client,))
-        ThreadCount += 1
-        print('Thread Number: ' + str(ThreadCount))
-    elif i==1:
-        Client, address = ServerSideSocket[i].accept()
-        print('Connected to: ' + address[0] + ':' + str(address[1]))
-        start_new_thread(port2, (Client,))
-        ThreadCount += 1
-        print('Thread Number: ' + str(ThreadCount))
-    elif i==2:
-        Client, address = ServerSideSocket[i].accept()
-        print('Connected to: ' + address[0] + ':' + str(address[1]))
-        start_new_thread(port3, (Client,),)
-        ThreadCount += 1
-        print('Thread Number: ' + str(ThreadCount))
-    elif i==3:
-        Client, address = ServerSideSocket[i].accept()
-        print('Connected to: ' + address[0] + ':' + str(address[1]))
-        start_new_thread(port4, (Client,))
-        ThreadCount += 1
-        print('Thread Number: ' + str(ThreadCount))
-    elif i==4:
-        Client, address = ServerSideSocket[i].accept()
-        print('Connected to: ' + address[0] + ':' + str(address[1]))
-
-        start_new_thread(port5, (Client,))
-        ThreadCount += 1
-        print('Thread Number: ' + str(ThreadCount))
-
-
-while True:
-    for i in range(len(ServerSideSocket)):
-        start_new_thread(multi_threaded_client,(i,))
 ServerSideSocket.close()
