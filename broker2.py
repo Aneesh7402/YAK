@@ -4,7 +4,7 @@ from _thread import *
 import time
 ServerSideSocket = socket.socket()
 host = '127.0.0.1'
-port = 2006
+port = 2007
 ThreadCount = 0
 no_reads={}
 no_writes={}

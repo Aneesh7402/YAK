@@ -4,9 +4,10 @@ from _thread import *
 import time
 ServerSideSocket = socket.socket()
 host = '127.0.0.1'
-port = 2006
+port = 2005
 ThreadCount = 0
 no_reads={}
+no_writes={}
 try:
     ServerSideSocket.bind((host, port))
 except socket.error as e:
@@ -14,9 +15,23 @@ except socket.error as e:
 print('Socket is listening..')
 ServerSideSocket.listen()
 def producer(connection,topic):
+    global no_reads
+    global no_writes
     not_replicate={}
     not_replicate[topic]=list()
     connection.send(str.encode("Send File"))
+    try:
+            l=len(no_writes[topic])
+    except KeyError:
+            no_writes[topic]=list()
+    while len(no_writes[topic])!=0:
+            pass
+    time.sleep(2)
+    try:
+            no_reads[topic].append(port)
+    except KeyError:
+            no_reads[topic]=list()
+            no_reads[topic].append(port)
     try:
         file=connection.recv(1024)
     except Exception as e:
@@ -50,6 +65,10 @@ def producer(connection,topic):
                     print(not_replicate[topic])
                 else:
                     rec1 = followerSocket.recv(1024)
+                    print(rec1.decode())
+                    followerSocket.send(str.encode("3"))
+                    rec2=followerSocket.recv(1024)
+                    print(rec2.decode())
                     followerSocket.send(topic.encode())
                     try:
                         rec2=followerSocket.recv(1024)
@@ -71,7 +90,10 @@ def producer(connection,topic):
                     print(not_replicate[topic][i])
             connection.send(str.encode("Task complete!"))
             connection.close()
+            no_reads[topic].remove(port)
 def follower(connection):
+    global no_reads
+    global no_writes
     connection.send(str.encode("Connection successful, send Topic!"))
     try:
         topic=connection.recv(1024).decode
@@ -84,11 +106,27 @@ def follower(connection):
         except Exception as e:
             print("Connection unsuccessful please replicate manually")
         else:
+            try:
+                l=len(no_reads[topic])
+            except KeyError:
+                no_reads[topic]=list()
+            while len(no_reads[topic])!=0:
+                pass
+            try:
+                    l=len(no_writes[topic])
+            except KeyError:
+                    no_writes[topic]=list()
+            while len(no_writes[topic])!=0:
+                    pass
+            no_writes[topic].append(port)
             #replicate()
             connection.send(str.encode("Replication successful"))
             connection.close()
-                
+    no_writes[topic].remove(port)            
 def consumer(connection):
+    global no_writes
+    global no_reads
+    
     try:
         l=connection.recv(1024)
     except Exception as e:
@@ -99,12 +137,26 @@ def consumer(connection):
         print(l)
         topic=l[1]
         flag=l[0]
+        try:
+            l=len(no_reads[topic])
+        except KeyError:
+            no_reads[topic]=list()
+        while len(no_reads[topic])!=0:
+            pass
+        try:
+                l=len(no_writes[topic])
+        except KeyError:
+                no_writes[topic]=list()
+        while len(no_writes[topic])!=0:
+                pass
+        no_writes[topic].append(port)
         if flag=="1":
             file="hi123g"#get_from_beg(topic)
         else:
             file="hi"#get_latest(topic)
         connection.send(file.encode())
         connection.close()
+        no_writes[topic].remove(port)
 
              
         
