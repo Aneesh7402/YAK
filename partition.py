@@ -4,21 +4,21 @@ def partitioner(topicName,value,msg):
     if is_exist == False:
         os.makedirs(topicName)
     if value%3==0 : 
-        f1 = open("/Users/akashshankar/"+topicName+"/part1.txt","a")
+        f1 = open("C:/Users/AdithyaR07/Desktop/BD/Project/"+topicName+"/part1.txt","a")
         f1.append(value+", "+msg)
         f1.close()
     elif value%3==1:
-        f2 = open("/Users/akashshankar/"+topicName+"/part2.txt","a")
+        f2 = open("C:/Users/AdithyaR07/Desktop/BD/Project/"+topicName+"/part2.txt","a")
         f2.append(value+", "+msg)
         f2.close()
     else:
-        f3 = open("/Users/akashshankar/"+topicName+"/part3.txt","a")
+        f3 = open("C:/Users/AdithyaR07/Desktop/BD/Project/"+topicName+"/part3.txt","a")
         f3.append(value+", "+msg)
         f3.close()
 def ReadFromBeginning(topicName):
-    f1 = open("/Users/akashshankar/"+topicName+"/part1.txt","w")
-    f2 = open("/Users/akashshankar/"+topicName+"/part2.txt","w")
-    f3 = open("/Users/akashshankar/"+topicName+"/part1.txt","w")
+    f1 = open("C:/Users/AdithyaR07/Desktop/BD/Project/"+topicName+"/part1.txt","w")
+    f2 = open("C:/Users/AdithyaR07/Desktop/BD/Project/"+topicName+"/part2.txt","w")
+    f3 = open("C:/Users/AdithyaR07/Desktop/BD/Project/"+topicName+"/part3.txt","w")
     str = ""
     while True:
         c = f1.read()
@@ -39,21 +39,22 @@ def ReadFromBeginning(topicName):
     return str
 def GetNewMessage(topicName,value):
     if value % 3 == 0:
-        f1 = open("/Users/akashshankar/"+topicName+"/part1.txt","r")
+        f1 = open("C:/Users/AdithyaR07/Desktop/BD/Project/"+topicName+"/part1.txt","r")
         for line in f1:
             data = line.split(", ")
             if int(data[0]) == value:
                 f1.close()
                 return data[1]
     elif value % 3 == 1:
-        f2 = open("/Users/akashshankar/"+topicName+"/part2.txt","r")
+        f2 = open("C:/Users/AdithyaR07/Desktop/BD/Project/"+topicName+"/part2.txt","r")
         for line in f2:
             data = line.split(", ")
             if int(data[0]) == value:
                 f2.close()
-                return data[1]                
+                return data[1]
+                
     elif value % 3 == 2:
-        f3 = open("/Users/akashshankar/"+topicName+"/part3.txt","r")
+        f3 = open("/C:/Users/AdithyaR07/Desktop/BD/Project/"+topicName+"/part3.txt","r")
         for line in f3:
             data = line.split(", ")
             if int(data[0]) == value:
@@ -62,3 +63,8 @@ def GetNewMessage(topicName,value):
     else:
         str = ""
         return str
+
+
+      
+        
+    
