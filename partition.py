@@ -51,8 +51,7 @@ def GetNewMessage(topicName,value):
             data = line.split(", ")
             if int(data[0]) == value:
                 f2.close()
-                return data[1]
-                
+                return data[1]                
     elif value % 3 == 2:
         f3 = open("/Users/akashshankar/"+topicName+"/part3.txt","r")
         for line in f3:
