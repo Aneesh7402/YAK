@@ -12,7 +12,7 @@ try:
 except socket.error as e:
     print(str(e))
 print('Socket is listening..')
-ServerSideSocket.listen(5)
+ServerSideSocket.listen()
 def producer(connection,topic):
     not_replicate={}
     not_replicate[topic]=list()
@@ -46,7 +46,8 @@ def producer(connection,topic):
                     followerSocket.connect((host, all_brokers[i]))
                 except socket.error as e:
                     print("Couldn't replicate with this broker connected to"+str(all_brokers[i])+", moving on")
-                    not_replicate[topic]=not_replicate[topic].append(all_brokers[i])
+                    not_replicate[topic].append(str(all_brokers[i]))
+                    print(not_replicate[topic])
                 else:
                     rec1 = followerSocket.recv(1024)
                     followerSocket.send(topic.encode())
@@ -55,13 +56,13 @@ def producer(connection,topic):
                         followerSocket.send(file.encode())
                     except Exception as e:
                         print("Couldn't replicate with this broker connected to"+str(all_brokers[i])+", moving on")
-                        not_replicate[topic]=not_replicate[topic].append(all_brokers[i])
+                        not_replicate[topic].append(str(all_brokers[i]))
                     else:
                         try:
                             rec3=followerSocket.recv(1024)
                         except Exception as e:
                             print("Couldn't replicate with this broker connected to"+str(all_brokers[i])+", moving on")
-                            not_replicate[topic]=not_replicate[topic].append(all_brokers[i])
+                            not_replicate[topic].append(str(all_brokers[i]))
                         else:
                             followerSocket.close()
             if i==(len(all_brokers)-1):
@@ -95,10 +96,11 @@ def consumer(connection):
         print(e)
     else:
         l=l.decode().split(',')
+        print(l)
         topic=l[1]
         flag=l[0]
-        if flag==1:
-            file="hi_beg"#get_from_beg(topic)
+        if flag=="1":
+            file="hi123g"#get_from_beg(topic)
         else:
             file="hi"#get_latest(topic)
         connection.send(file.encode())
