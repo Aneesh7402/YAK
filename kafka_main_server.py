@@ -9,6 +9,7 @@ ThreadCount = 0
 topic2broker={1:2005,2:2006,3:2007,4:2008}
 topic2consumer={}
 allbrokers=[2005,2006,2007,2008,2009,2010,2020]
+
 try:
     ServerSideSocket.bind((host, port))
 except socket.error as e:
@@ -37,6 +38,7 @@ def consumer_read(topic):
             else:
                 ClientSocket52.close()
         topic2consumer[topic]=[x for x in topic2consumer[topic] if x!=-1]
+        
 def multi_threaded_client(connection):
     global topic2consumer
     global topic2broker
@@ -48,56 +50,106 @@ def multi_threaded_client(connection):
             connection.close()
             break
         data=data.decode('utf-8')
-        data= data.split(",")
-        port=data[0]
+        port=data
         
         if(port==1):
-             topic=data[1]
-             file=data[2]
-             file='1,'+file
+             connection.send(str.encode("Send the Topic"))
+             for j in range(5):
+                topic = connection.recv(2048)
+                if data:
+                    break
+             connection.send(str.encode("Send the File"))
+             for j in range(5):
+                file = connection.recv(2048)
+                if data:
+                    break
+             topic=topic.decode()
+             file=file.decode()
              
              for i in range(len(topic2broker[topic])):
                 ClientMultiSocket = socket.socket()
                 try:
                     ClientMultiSocket.connect((host, topic2broker[topic][i]))
-                except socket.error as e:
+                    res=ClientMultiSocket.recv(1024)
+                except Exception as e:
                     print(str(e))
                 else:
-                    break
+                                
+                                ClientMultiSocket.send(str.encode("1"))
+                                try:
+                                    res=ClientMultiSocket.recv(1024)
+                                except Exception as e:
+                                    print(e)
+                                else:
+                                    ClientMultiSocket.sendall(file.encode())
+                                    try:
+                                        res=ClientMultiSocket.recv(1024)
+                                    except Exception as e:
+                                        print(e)
+                                    else:
+                                        ClientMultiSocket.sendall(str.encode(str(allbrokers)))
+                                        try:
+                                            res=ClientMultiSocket.recv(1024)
+                                        except Exception as e:
+                                            print(e)
+                                        else:
+                                            ClientMultiSocket.close()
+                                            connection.send(str.encode(res.decode('utf-8')))
+                                            connection.close()
+                                            consumer_read(topic)
+                                            break
              if i==len(topic2broker[topic]):
                 topic2broker[topic]=list()
                 for i in range(len(allbrokers)):
                     try:
                         ClientMultiSocket.connect((host, allbrokers[i]))
-                    except socket.error as e:
+                        res=ClientMultiSocket.recv(1024)
+                    except Exception as e:
                         print(str(e))
                     else:
                         topic2broker[topic]=topic2broker[topic].append(allbrokers[i])
+                        ClientMultiSocket.send(str.encode("1"))
+                        try:
+                            res=ClientMultiSocket.recv(1024)
+                        except Exception as e:
+                            print(e)
+                        else:
+                            ClientMultiSocket.sendall(file.encode())
+                            try:
+                                res=ClientMultiSocket.recv(1024)
+                            except Exception as e:
+                                print(e)
+                            else:
+                                        ClientMultiSocket.sendall(str.encode(str(allbrokers)))
+                                        try:
+                                            res=ClientMultiSocket.recv(1024)
+                                        except Exception as e:
+                                            print(e)
+                                        else:
+                                            connection.send(str.encode(res.decode('utf-8')))
+                                            connection.close()
+                                            consumer_read(topic)
+                                            break
                         break
              if i==len(allbrokers):
                 print("The leaders are unavailable at the moment")
                 connection.close()
                 break
-             ClientMultiSocket.sendall(file.encode())
-             
-             res = ClientMultiSocket.recv(1024)
-             connection.send(str.encode(res.decode('utf-8')))
-             connection.close()
-             consumer_read(topic)
              
 
         if(port==2):
              topic=data[1]
              portno=data[2]
              flag=data[3]
-             topic2consumer[topic]=portno
+             topic2consumer[topic]=topic2consumer[topic].append(portno)
              res6="Connection successful"
              connection.send(str.encode(res6))
              connection.close()
-             ClientMultiSocket1 = socket.socket()
+             
              time.sleep(5)
              if flag==1:
                 try:
+                    ClientMultiSocket1 = socket.socket()
                     ClientMultiSocket1.connect((host,portno))
                 except socket.error as e:
                     print(str(e))
@@ -110,17 +162,24 @@ def multi_threaded_client(connection):
                             try:
                                 ClientMultiSocket2.connect((host, allbrokers[i]))
                             except socket.error as e:
+                                ClientMultiSocket2.close()
                                 print(str(e))
                             else:
-                                res = ClientMultiSocket2.recv(1024)
-                                if res:
-                                ClientMultiSocket2.close()  
-                                break
+                                ClientMultiSocket2.send(str.encode(flag+","+topic))
+                                try:
+                                    res1 = ClientMultiSocket2.recv(1024)#sendflag
+                                except Exception as e:
+                                    ClientMultiSocket2.close()
+                                    print("flag/topic not received")
+                                else:
+                                    file=res1.decode()
+                                    ClientMultiSocket2.close()
                     
                         if i!=len(allbrokers):
                             break
-                    ClientMultiSocket1.sendall(str.encode(res.decode('utf-8')))
+                    ClientMultiSocket1.sendall(str.encode(file))
                     res1 = ClientMultiSocket1.recv(1024)
+                    ClientMultiSocket1.close()
 
                     
             
