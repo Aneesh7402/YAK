@@ -9,7 +9,7 @@ port = 2004
 ThreadCount = 0
 topic2broker={'1':['2005'],'2':['2006']}
 topic2consumer={}
-allbrokers=[2005,2006]
+allbrokers=[2005,2006,2007]
 
 try:
     ServerSideSocket.bind((host, port))
@@ -235,8 +235,20 @@ def multi_threaded_client(connection):
                     ClientMultiSocket1.close()
 
                     
-            
-             
+        if(port=="3"):
+             l=list()
+             all_broker1=connection.recv(1024).decode()
+             all_broker1=list(map(int,all_broker1.strip('[').strip(']').split(',')))
+             l=[x for x in allbrokers if x not in all_broker1]
+             allbrokers=all_broker1
+             for x in topic2broker:
+                for y in l:
+                    if y in topic2broker[x]:
+                        topic2broker[x].remove(l)
+                        if len(topic2broker[x])==0:
+                            topic2broker[x].append(random.choice(allbrokers))
+             connection.send(str.encode("Successful"))
+             print(allbrokers)
              connection.close()
              
         
