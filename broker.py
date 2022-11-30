@@ -66,8 +66,39 @@ def producer(connection,topic):
                     print(not_replicate[topic][i])
             connection.send(str.encode("Task complete!"))
             connection.close()
-            
-
+def follower(connection):
+    connection.send(str.encode("Connection successful, send Topic!"))
+    try:
+        topic=connection.recv().decode
+    except Exception as e:
+        print("Connection unsuccessful please replicate manually")
+    else:
+        connection.send(str.encode("Topic received, send file!"))
+        try:
+            file=connection.recv().decode
+        except Exception as e:
+            print("Connection unsuccessful please replicate manually")
+        else:
+            #replicate()
+            connection.send(str.encode("Replication successful"))
+            connection.close()
+                
+def consumer(connection):
+    try:
+        l=connection.recv()
+    except Exception as e:
+        connection.close()
+        print(e)
+    else:
+        l=l.decode().split(',')
+        topic=l[1]
+        flag=l[0]
+        if flag==1:
+            file="hi_beg"#get_from_beg(topic)
+        else:
+            file="hi"#get_latest(topic)
+        connection.send(file.encode())
+        connection.close()
 
              
         
@@ -81,7 +112,10 @@ while True:
         recv=recv.decode
         if recv=='1':
             producer(Client)
-
+        elif recv=='2':
+            consumer(Client)
+        elif recv=="3":
+            follower(Client)
         ThreadCount += 1
         print('Thread Number: ' + str(ThreadCount))
     except socket.error as e:
