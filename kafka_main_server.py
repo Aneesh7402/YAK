@@ -19,25 +19,34 @@ ServerSideSocket.listen(5)
 def consumer_read(topic):
     global topic2consumer
     global allbrokers
-    for i in range(len(allbrokers)):
-        ClientSocket=socket.socket()
-        while True:
+    while True:
+        for i in range(len(allbrokers)):
+            ClientSocket=socket.socket()
+        
             try:
                 ClientSocket.connect((host, allbrokers[i]))
             except socket.error as e:
                 print(str(e))
             else:
-                resv2 = ClientSocket.recv(1024)
-                break
-        for i in range(len(topic2consumer[topic])):
-            ClientSocket52=socket.socket()
-            try:
-                ClientSocket52.sendall(resv2)
-            except Exception:
-                topic2consumer[topic][i]=-1
-            else:
-                ClientSocket52.close()
-        topic2consumer[topic]=[x for x in topic2consumer[topic] if x!=-1]
+                ClientSocket.send(str.encode("0,"+topic))
+                try:
+                    resv2 = ClientSocket.recv(1024)
+                except Exception as e:
+                    print(e)
+                    ClientSocket.close()
+                else:    
+                    break
+        if i!=len(allbrokers):
+            break
+    for i in range(len(topic2consumer[topic])):
+        ClientSocket52=socket.socket()
+        try:
+            ClientSocket52.sendall(resv2)
+        except Exception:
+            topic2consumer[topic][i]=-1
+        else:
+            ClientSocket52.close()
+    topic2consumer[topic]=[x for x in topic2consumer[topic] if x!=-1]
         
 def multi_threaded_client(connection):
     global topic2consumer
