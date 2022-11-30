@@ -31,13 +31,14 @@ else:
         sck = socket.socket()
         sck.bind((host,portS))
         sck.listen()
-        conn,addr = sck.accept()
+        
         while True:
             try:
-                
-                file=sck.recv(1024).decode()
+                conn,addr = sck.accept()
+                file=conn.recv(1024).decode()
                 print(file)
-                sck.send(str.encode("Received file"))
+                conn.send(str.encode("Received file"))
+                conn.close()
             except Exception as e:
                 print(e)
                 break
