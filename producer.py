@@ -8,8 +8,18 @@ try:
 except socket.error as e:
     print(str(e))
 res = ClientMultiSocket.recv(1024)
+print(res.decode())
+
+ClientMultiSocket.send(str.encode("1"))
+resv=ClientMultiSocket.recv(1024)
+print(resv.decode())
+topic = input('Enter topic: ')
+
+ClientMultiSocket.send(str.encode(topic))
+send_file=ClientMultiSocket.recv(1024)
+print(send_file.decode())
 while True:
-    Input1 = input('Enter topic: ')
+    
     File_object=None
     while File_object==None:
         Input2=input("Enter file path: ")
@@ -17,7 +27,7 @@ while True:
             File_object = open(Input2)
         except Exception:
             print("File does not exist")
-    Final="1,"+Input1+','+File_object.read()
+    Final=File_object.read()
     while True:
         try:
             ClientMultiSocket.sendall(str.encode(Final))
@@ -28,4 +38,5 @@ while True:
 
     res = ClientMultiSocket.recv(1024)
     print(res.decode('utf-8'))
+    break
 ClientMultiSocket.close()
