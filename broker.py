@@ -1,15 +1,17 @@
 import socket
-import config
 import os
 from _thread import *
 import time
-from partition import partitioner,ReadFromBeginning,GetNewMessage
+from partition import partitioner,ReadFromBeginning
+import sys
+sys.path.append(r"C:\Users\91966\OneDrive\Desktop\BigData_Project\copy\testing\b")
 ServerSideSocket = socket.socket()
 host = '127.0.0.1'
-port = 2006
+port = 2005
 ThreadCount = 0
 no_reads={}
 no_writes={}
+import config
 try:
     ServerSideSocket.bind((host, port))
 except socket.error as e:
@@ -125,6 +127,10 @@ def follower(connection):
             while len(no_writes[topic])!=0:
                     pass
             no_writes[topic].append(port)
+            if topic not in config.d:
+                config.d[topic] = 1
+            else:
+                config.d[topic]+=1
             partitioner(topic,config.d[topic]-1,file)
             connection.send(str.encode("Replication successful"))
             connection.close()
@@ -157,7 +163,7 @@ def consumer(connection):
                 pass
         no_writes[topic].append(port)
         if flag=="1":
-            file= ReadFromBeginning(topic)
+            file=ReadFromBeginning(topic)
         else:
             file="newmsg"
         connection.send(file.encode())

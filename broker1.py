@@ -127,6 +127,10 @@ def follower(connection):
             while len(no_writes[topic])!=0:
                     pass
             no_writes[topic].append(port)
+            if topic not in config.d:
+                config.d[topic] = 1
+            else:
+                config.d[topic]+=1
             partitioner(topic,config.d[topic]-1,file)
             connection.send(str.encode("Replication successful"))
             connection.close()
