@@ -2,12 +2,16 @@ import socket
 import os
 from _thread import *
 import time
+from partition import partitioner,ReadFromBeginning
+import sys
+sys.path.append(r"C:\Users\91966\OneDrive\Desktop\BigData_Project\copy\testing\b")
 ServerSideSocket = socket.socket()
 host = '127.0.0.1'
 port = 2005
 ThreadCount = 0
 no_reads={}
 no_writes={}
+import config
 try:
     ServerSideSocket.bind((host, port))
 except socket.error as e:
@@ -19,6 +23,10 @@ def producer(connection,topic):
     global no_writes
     not_replicate={}
     not_replicate[topic]=list()
+    if topic not in config.d:
+        config.d[topic] = 1
+    else:
+        config.d[topic]+=1
     connection.send(str.encode("Send File"))
     try:
             l=len(no_writes[topic])
@@ -41,7 +49,7 @@ def producer(connection,topic):
     else:
         file=file.decode()
         print(file)
-        #partitioning function
+        partitioner(topic,config.d[topic]-1,file)
         try:
             connection.send(str.encode("send all brokers"))
             all_brokers=connection.recv(1024)
@@ -96,13 +104,13 @@ def follower(connection):
     global no_writes
     connection.send(str.encode("Connection successful, send Topic!"))
     try:
-        topic=connection.recv(1024).decode
+        topic=connection.recv(1024).decode()
     except Exception as e:
         print("Connection unsuccessful please replicate manually")
     else:
         connection.send(str.encode("Topic received, send file!"))
         try:
-            file=connection.recv(1024).decode
+            file=connection.recv(1024).decode()
         except Exception as e:
             print("Connection unsuccessful please replicate manually")
         else:
@@ -119,7 +127,7 @@ def follower(connection):
             while len(no_writes[topic])!=0:
                     pass
             no_writes[topic].append(port)
-            #replicate()
+            partitioner(topic,config.d[topic]-1,file)
             connection.send(str.encode("Replication successful"))
             connection.close()
     no_writes[topic].remove(port)            
@@ -151,9 +159,9 @@ def consumer(connection):
                 pass
         no_writes[topic].append(port)
         if flag=="1":
-            file="hi123g"#get_from_beg(topic)
+            file=ReadFromBeginning(topic)
         else:
-            file="hi"#get_latest(topic)
+            file="newmsg"
         connection.send(file.encode())
         connection.close()
         no_writes[topic].remove(port)
