@@ -19,7 +19,7 @@ print('Socket is listening..')
 ServerSideSocket.listen()
 
 
-def consumer_read(topic):
+def consumer_read(topic,file):
     global topic2consumer
     global allbrokers
     try:
@@ -133,7 +133,7 @@ def multi_threaded_client(connection):
                                             ClientMultiSocket.close()
                                             connection.send(str.encode(res.decode('utf-8')))
                                             connection.close()
-                                            consumer_read(topic)
+                                            consumer_read(topic,file)
                                             break
              if i==len(topic2broker[topic]):
                 topic2broker[topic]=list()
